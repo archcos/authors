@@ -26,7 +26,7 @@ Class AuthorController extends Controller {
     public function add(Request $request){
         $rules = [
             'fullname' => 'required|max:150',
-            'gender' => 'required|max:10',
+            'gender' => 'in:Male,Female',
             'birthday' => 'required|date:y-m-d',
         ];
 
@@ -45,11 +45,26 @@ Class AuthorController extends Controller {
             return $this->errorResponse("Author id not found", Response::HTTP_NOT_FOUND);
         }
 
-    public function update(Request $request, $id)  {
-        $author = Author::findOrFail($id);
-        $author->update($request->all());
-    
-            return $this->successResponse($author, Response::HTTP_CREATED);
+    public function update(Request $request,$id)
+        {
+           $rules = [
+               'fullname' => 'max:20',
+               'gender' => 'in:Male,Female',
+               'birthday' => 'date:y-m-d',
+           ];
+       
+           $this->validate($request, $rules);
+       
+           $author = Author::findOrFail($id);
+       
+           $author->fill($request->all());
+       
+           if ($author->isClean()) {
+               return $this->errorResponse('At least one value must change', Response::HTTP_UNPROCESSABLE_ENTITY);
+           }
+       
+           $author->save();
+           return $this->successResponse($author);
         }
 
     public function delete($id, Request $request)
